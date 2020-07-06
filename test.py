@@ -16,7 +16,7 @@ def load_pred_flow(data_root):
         flow = [x.transpose(1,2,0) for x in flow]
     return flow
 
-def evaluate(data, gt, seq_name, events):
+def evaluate(data, gt, seq_name, events, source="ours"):
 
     data_ts = np.loadtxt(os.path.join(data, "timestamps.txt"))
     data_ts_end = np.append(data_ts[1:-1], data_ts[-2:])
