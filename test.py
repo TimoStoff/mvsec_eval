@@ -37,6 +37,9 @@ def evaluate(data, gt, seq_name, events, source="ours"):
     print("Processing {}...".format(seq_name))
     for idx, pred_flow in enumerate(tqdm(flow_predictions)):
         img_ts = image_timestamps[idx]
+        if img_ts[1]-img_ts[0] == 0:
+            print("WARNING: Issue with timestamps, dt=0")
+            continue
 
         U_gt, V_gt = estimate_corresponding_gt_flow(U_gt_all, V_gt_all,
                                                     gt_timestamps,
