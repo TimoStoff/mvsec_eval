@@ -7,7 +7,7 @@ import numpy as np
 
 from eval_utils import *
 from event_utils import events_to_image
-from memmap_dataset import MemMapLoader
+from data import HDF5EventLoader
 
 def load_pred_flow(data_root):
     flow_list = sorted(glob.glob(os.path.join(data_root, "*npy")))
@@ -61,7 +61,7 @@ def evaluate(data, gt, seq_name, events):
         
         event_img = None
         event_set = events.get_by_frame_ts(img_ts[0], img_ts[1])
-        event_img = events_to_image(event_set['xs'].int(), event_set['ys'].int(), event_set['ps'], sensor_size=(image_size[0], image_size[1]))
+        event_img = events_to_image(event_set['xs'], event_set['ys'], event_set['ps'], sensor_size=(image_size[0], image_size[1]))
 
         # Calculate flow error.
         AEE, percent_AEE, n_points = flow_error_dense(gt_flow, 
@@ -76,17 +76,14 @@ def evaluate(data, gt, seq_name, events):
 def evaluate_all(gt_root, data_root, savedir, eventsdir, source):
     gt_files = sorted(glob.glob(os.path.join(gt_root, "*npz")))
     data_files = sorted(glob.glob(os.path.join(data_root, "*")))
-    event_files = []
-    for ef in sorted(glob.glob(os.path.join(eventsdir, "*"))):
-        if os.path.isdir(ef):
-            event_files.append(ef)
+    event_files = sorted(glob.glob(os.path.join(eventsdir, "*.h5")))
     seqnames = [os.path.basename(x.strip("_gt_flow_dist.npz")) for x in gt_files]
 
     for seq, data, gt, events in zip(seqnames, data_files, gt_files, event_files):
         if not seq in data or not seq in gt:
             raise Exception("{} and {} do not match".format(data, gt))
 
-        event_loader = MemMapLoader(events)
+        event_loader = HDF5EventLoader(events)
         err = evaluate(data, gt, seq, event_loader, source)
         print("AEE={}".format(np.mean(err[0])))
         print("%AEE={}".format(np.mean(err[1])))
